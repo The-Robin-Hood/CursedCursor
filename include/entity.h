@@ -28,5 +28,5 @@ public:
 	void setAnimOffsetY(int p_index, int p_value);
 	SDL_Texture* getTex(int p_index);
 	SDL_Rect getCurrentFrame();
-	void setTex(SDL_Texture* p_tex);
+	void setTex(int index,SDL_Texture* p_tex);
 };

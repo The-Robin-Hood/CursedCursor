@@ -96,7 +96,7 @@ SDL_Rect Entity::getCurrentFrame()
 	return currentFrame;
 }
 
-void Entity::setTex(SDL_Texture* p_tex)
+void Entity::setTex(int index,SDL_Texture* p_tex)
 {
-	tex[0] = p_tex;
+	tex[index] = p_tex;
 }

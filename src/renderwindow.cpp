@@ -38,7 +38,7 @@ SDL_Texture* RenderWindow::loadTexture(const char* p_filePath)
 
 void RenderWindow::clear()
 {
-	SDL_SetRenderDrawColor(renderer, 90, 90, 90, 255);
+	SDL_SetRenderDrawColor(renderer, 202, 199, 195, 255);
 	SDL_RenderClear(renderer);
 }
 
@@ -47,6 +47,7 @@ void RenderWindow::render(Entity& p_entity)
 
 	for (int i = p_entity.getSize() - 1; i >= 0; i--)
 	{
+		if(i==6) continue;
 		SDL_Rect src;
 		src.x = p_entity.getCurrentFrame().x;
 		src.y = p_entity.getCurrentFrame().y;
@@ -82,6 +83,33 @@ void RenderWindow::render(float p_x, float p_y, SDL_Texture* p_tex)
 void RenderWindow::render(SDL_Texture* p_tex)
 {
 	render(0, 0, p_tex);
+}
+
+
+void RenderWindow::render(float p_x, float p_y, SDL_Texture* p_tex, float healthPercent)
+{
+    SDL_Rect src;
+    src.x = 0;
+    src.y = 0;
+
+    // Get original texture width & height
+    SDL_QueryTexture(p_tex, NULL, NULL, &src.w, &src.h); 
+
+    // Crop width based on health percentage
+    src.w = static_cast<int>(src.w * healthPercent); 
+
+    SDL_Rect dst;
+    dst.x = p_x;
+    dst.y = p_y;
+    dst.w = src.w;  // Scale the destination width too
+    dst.h = src.h;
+
+    SDL_RenderCopy(renderer, p_tex, &src, &dst);
+}
+
+void RenderWindow::renderWithSrc(SDL_Rect src, SDL_Texture* p_tex, SDL_Rect dst)
+{
+	SDL_RenderCopy(renderer, p_tex, &src, nullptr);
 }
 
 void RenderWindow::render(float p_x, float p_y, const char* p_text, TTF_Font* font, SDL_Color textColor)

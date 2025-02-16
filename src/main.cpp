@@ -25,6 +25,7 @@ const int SCREEN_HEIGHT = 480;
 const int ALIVE = 0;
 const int CURSOR_DEATH = 1;
 const int HOLE_DEATH = 2;
+const int NO_HEALTH_DEATH = 3;
 
 const Uint8 *keyState;
 
@@ -70,6 +71,10 @@ bool init()
 	playerTex.push_back(window.loadTexture("res/textures/player/player_2.png"));
 	playerTex.push_back(window.loadTexture("res/textures/player/player_3.png"));
 	playerTex.push_back(window.loadTexture("res/textures/player/player_4.png"));
+	playerTex.push_back(window.loadTexture("res/textures/player/player_5.png"));
+	playerTex.push_back(window.loadTexture("res/textures/player/player_6.png"));
+	playerTex.push_back(window.loadTexture("res/textures/player/player_7.png"));
+
 
 	groundTex[0] = window.loadTexture("res/textures/ground/left.png");
 	groundTex[1] = window.loadTexture("res/textures/ground/center.png");
@@ -152,15 +157,15 @@ void gameLoop()
 		if (SDL_GetTicks() < 2500)
 		{
 			window.clear();
-			window.renderCenter(0, sin(SDL_GetTicks()/100) * 2 - 4, "POLYMARS", font24, white);
+			window.renderCenter(0, sin(SDL_GetTicks()/100) * 2 - 4, "CURSED CURSOR", font24, white);
 			window.display();
 		}
 		else 
 		{
 			window.clear();
 
-			window.render(SCREEN_WIDTH/2 - 234, SCREEN_HEIGHT/2 - 94 - 30, logo);
-			window.renderCenter(0, 90 + sin(SDL_GetTicks()/100) * 2, "Click to start", font24, white);
+			window.render(0, 0, logo);
+			window.renderCenter(0, 100 + sin(SDL_GetTicks()/100) * 2, "Click to start", font24, white);
 			
 			for (int i = 0; i < ground.getLength(); i++)
 			{
@@ -195,6 +200,12 @@ void gameLoop()
 		window.clear();
 
 		window.render(player);
+
+		{
+			float currentHealth = player.getHealth() > 50 ? player.getHealth() : player.getHealth() + 15;
+			window.render(player.getX() + player.getAnimOffsetX(6), player.getY() + player.getAnimOffsetY(6), player.getTex(6), (currentHealth/player.maxHealth));
+		}
+
 		for (int i = 0; i < ground.getLength(); i++)
 		{
 			window.render(ground.getTile(i));
@@ -215,6 +226,9 @@ void gameLoop()
 			else if (player.isDead() == HOLE_DEATH)
 			{
 				window.renderCenter(0, -24, "The hole had no bottom...", font24, white);
+			}else if(player.isDead() == NO_HEALTH_DEATH)
+			{
+				window.renderCenter(0, -24, "The player died of exhaustion...", font24, white);
 			}
 			window.renderCenter(0, 12, "Click to retry.", font16, white);
 		}
@@ -222,8 +236,26 @@ void gameLoop()
 	}
 }
 
+//DEBUGGING
+#ifdef _WIN32
+#include <windows.h>
+#include <iostream>
+void attachConsole() {
+    AllocConsole();  // Allocate a console
+    freopen("CONOUT$", "w", stdout);  // Redirect stdout to console
+    freopen("CONOUT$", "w", stderr);  // Redirect stderr to console
+}
+#endif
+
 int main(int argc, char* args[])
 {
+	#ifdef _WIN32
+	if(argc > 1 && strcmp(args[1], "console") == 0)
+	{
+    	attachConsole();
+	}
+	#endif
+
 	#ifdef __EMSCRIPTEN__
 	emscripten_set_main_loop(gameLoop, 0, 1);
 	#else

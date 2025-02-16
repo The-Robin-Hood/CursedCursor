@@ -3,6 +3,7 @@
 #include <cmath>
 #include <vector>
 #include <string>
+#include <iostream>	
 
 #include "player.h"
 #include "entity.h"
@@ -14,6 +15,7 @@ const int SCREEN_HEIGHT = 480;
 const int ALIVE = 0;
 const int CURSOR_DEATH = 1;
 const int HOLE_DEATH = 2;
+const int NO_HEALTH_DEATH = 3;
 
 Player::Player(float p_x, float p_y, std::vector<SDL_Texture*> p_tex)
 	: Entity{ p_x, p_y, p_tex}
@@ -34,12 +36,21 @@ bool Player::jump()
 {
 	if (distanceFromCursor() < 100)
 	{
-		if (grounded)
-		{
-			velocityY = -(1/distanceFromCursor() * 200);
-			grounded = false;
+		if (grounded) {
+    		doubleJump = true;  
+		}
+
+		if (grounded || doubleJump) {
+			velocityY = -(1 / distanceFromCursor() * 200);
+				
+			if (!grounded) {
+				highestPointY = getY();
+				doubleJump = false; 
+			}
+			grounded = false;  
 			return true;
 		}
+
 	}
 	return false;
 }
@@ -63,6 +74,15 @@ void Player::animEyes()
 	setAnimOffsetY(0, clamp(mouseY - getY() - getHeight()/2 + 15, -2.5, 2.5));
 }
 
+void Player::updateHealth(int currentHealth){
+	health = currentHealth;
+}
+
+int Player::getHealth(){
+	std::cout << "HEALTH: " << health << std::endl;
+	return health;
+}
+
 void Player::update(Ground& ground)
 {
 	timer++;
@@ -80,6 +100,33 @@ void Player::update(Ground& ground)
 	animEyes();
 	setAnimOffsetY(3, 0);
 	setAnimOffsetY(4, 0);
+
+	if(!grounded){
+		if(velocityY < 0){
+			highestPointY = std::min(getY(), highestPointY);
+			std::cout << "HIGHEST POINT: " << highestPointY << std::endl;
+			std::cout << "CURRENT Y: " << getY() << std::endl;
+			isFalling = true;
+		}
+	}
+
+	if(grounded && isFalling){
+		fallHeight = abs(highestPointY - getY());
+		std::cout << "CURRENT Y: " << getY() << std::endl;
+		std::cout << "FALL HEIGHT: " << fallHeight << std::endl;
+		if (fallHeight > SAFE_FALL_HEIGHT) {  
+			int damage = (fallHeight - SAFE_FALL_HEIGHT) * DAMAGE_MULTIPLIER;
+			std::cout<< "TAKING DAMAGE" << std::endl;
+			updateHealth(getHealth()-damage);
+   		}
+
+    	isFalling = false;  
+		highestPointY = getY();
+	}
+
+	if(getHealth() < 0){
+		dead = NO_HEALTH_DEATH;
+	}
 
 	if (distanceFromCursor() < 100)
 	{
@@ -134,8 +181,7 @@ void Player::update(Ground& ground)
 			{
 				dead = HOLE_DEATH;
 			}
-	}
-	
+	}	
 }
 
 const char* Player::getScore()
@@ -171,4 +217,5 @@ void Player::reset()
 	velocityX = 0;
 	velocityY = 0;
 	dead = 0;
+	health = 100;
 }
